@@ -37,14 +37,18 @@ const Feedback = ({params}) => {
 
   return (
     <div className='p-10'>
-      <h2 className='text-3xl font-bold text-green-600'>Congratulations!</h2>
-      <h2 className='font-bold text-2xl'>Here is your interview feedback</h2>
-      {feedbackList?.length == 0 ?
-        <h2 className='font-bold text-lg text-green-500'>OOps!No feedback as answers haven't been recorded</h2>
-        : <>
-          <h2 className='text-primary text-lg my-2'>
-            Your overall interview rating: <strong>{overallRating}/10</strong>
-          </h2>
+    {/* Render feedback only if there are recorded answers */}
+    {feedbackList?.length === 0 ? (
+      <h2 className='font-bold text-lg text-green-500'>
+        Oops😓! No feedback as answers haven't been recorded.
+      </h2>
+    ) : (
+      <>
+        <h2 className='text-3xl font-bold text-green-600'>Congratulations🥳!</h2>
+        <h2 className='font-bold text-2xl'>Here is your interview feedback</h2>
+        <h2 className='text-primary text-lg my-2'>
+          Your overall interview rating: <strong>{overallRating}/10</strong>
+        </h2>
           <h2 className='text-sm text-gray-500'>Find below interview questions with coreect answers,Your answer and feedback for improvements for your next interview</h2>
           {feedbackList && feedbackList.map((item, index) => (
             <Collapsible key={index} className='mt-7'>
@@ -67,7 +71,7 @@ const Feedback = ({params}) => {
             </Collapsible>
           ))}
         </>
-      }
+      )}
       <Button className='mt-5' onClick={() => router.replace('/dashboard')}> Go Home</Button>
     </div>
   );
