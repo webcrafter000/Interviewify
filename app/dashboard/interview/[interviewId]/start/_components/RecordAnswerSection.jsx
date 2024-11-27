@@ -1,7 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Webcam from "react-webcam";
 import useSpeechToText from "react-hook-speech-to-text";
 import { Mic, StopCircle } from "lucide-react";
@@ -18,6 +18,7 @@ const RecordAnswerSection = ({
   interviewData,
 }) => {
   const [userAnswer, setUserAnswer] = useState("");
+  const transcriptSet = useRef(new Set()); // Tracks unique transcripts
   const { user } = useUser();
   const [loading, setLoading] = useState(false);
 
@@ -30,25 +31,32 @@ const RecordAnswerSection = ({
     stopSpeechToText,
     setResults,
   } = useSpeechToText({
-    continuous: true,
+    continuous: true, // Enables continuous listening
     useLegacyResults: false,
   });
 
-  // Deduplication logic: Update `userAnswer` with sanitized results
+  // Append unique transcripts to userAnswer
   useEffect(() => {
-    const newAnswer = results
-      .map((result) => result?.transcript.trim())
-      .join(" ");
-
-    if (!userAnswer.includes(newAnswer)) {
-      setUserAnswer((prevAns) => `${prevAns} ${newAnswer}`.trim());
-    }
+    results.forEach((result) => {
+      if (!transcriptSet.current.has(result.transcript)) {
+        transcriptSet.current.add(result.transcript);
+        setUserAnswer((prev) => `${prev} ${result.transcript}`.trim());
+      }
+    });
   }, [results]);
 
-  // Reset `userAnswer` when question changes
+  // Reset userAnswer and transcriptSet when question changes
   useEffect(() => {
     setUserAnswer("");
+    transcriptSet.current.clear();
   }, [activeQuestionIndex]);
+
+  // Ensure continuous recording
+  useEffect(() => {
+    if (!isRecording && results.length > 0) {
+      startSpeechToText(); // Automatically restart recording
+    }
+  }, [isRecording, results]);
 
   // Save user answer and generate feedback
   useEffect(() => {
@@ -61,14 +69,13 @@ const RecordAnswerSection = ({
     if (isRecording) {
       stopSpeechToText();
     } else {
+      transcriptSet.current.clear(); // Reset transcriptSet when starting fresh
       startSpeechToText();
     }
   };
 
   const UpdateUserAnswer = async () => {
-    console.log(userAnswer, "########");
     setLoading(true);
-
     const feedbackPrompt =
       "Question:" +
       mockInterviewQuestion[activeQuestionIndex]?.question +
@@ -78,28 +85,13 @@ const RecordAnswerSection = ({
       " please give user rating for answer and feedback as area of improvement if any" +
       " in just 3 to 5 lines to improve it in JSON format with rating field and feedback field";
 
-    console.log(
-      "🚀 ~ file: RecordAnswerSection.jsx:38 ~ SaveUserAnswer ~ feedbackPrompt:",
-      feedbackPrompt
-    );
-
     const result = await chatSession.sendMessage(feedbackPrompt);
-    console.log(
-      "🚀 ~ file: RecordAnswerSection.jsx:46 ~ SaveUserAnswer ~ result:",
-      result
-    );
-
     const mockJsonResp = result.response
       .text()
       .replace("```json", "")
       .replace("```", "");
-
-    console.log(
-      "🚀 ~ file: RecordAnswerSection.jsx:47 ~ SaveUserAnswer ~ mockJsonResp:",
-      mockJsonResp
-    );
-
     const JsonfeedbackResp = JSON.parse(mockJsonResp);
+
     const resp = await db.insert(UserAnswer).values({
       mockIdRef: interviewData?.mockId,
       question: mockInterviewQuestion[activeQuestionIndex]?.question,
