@@ -107,7 +107,7 @@ const RecordAnswerSection = ({
     setLoading(false);
   };
 
-  if (error) return <b><p>Web Speech API may  not function on some browser‍s!<center><br />Works best on Chrome!</center></p> </b>;
+  if (error) return <b><p>Web Speech API may  not function on some browser‍s!<center><br />No record option available!Works best on Chrome!</center></p> </b>;
   return (
     <div className="flex justify-cente items-center flex-col">
       <div className="flex flex-col my-20 justify-center items-center bg-black rounded-lg p-5">
