@@ -87,7 +87,7 @@ with our AI-powered interview prep</p>
 
         <h2 className="mt-4 text-xl font-bold text-black">Give Permissions to Browser </h2>
 
-        <p className="mt-1 text-sm text-gray-600">
+        <p className="mt-1 text-sm text-blue-600">
          Enable Mic and Cam to start Interview
         </p>
       </a>
